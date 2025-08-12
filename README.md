@@ -1,2 +1,2 @@
 # F1_Telemetry
-Dashboard using open source F1 telemetry data
+A personal project based on F1 telemetry data. Going to work on it everyday for 2 hours until completion.
