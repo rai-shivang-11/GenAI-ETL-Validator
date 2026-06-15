@@ -1,2 +1,2 @@
 # Gen-AI ETL Validator
-Project pivot to an ETL validator using genAI.
+Working prototype of an LLM bases ETL validator
