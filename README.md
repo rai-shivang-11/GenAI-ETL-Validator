@@ -1,2 +1,2 @@
 # Gen-AI ETL Validator
-Working prototype of an LLM bases ETL validator
+Working prototype of an LLM based ETL validator
