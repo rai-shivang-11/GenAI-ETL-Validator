@@ -1,79 +1,82 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 from dataclasses import dataclass, field
-from typing import List, Dict
-
+from typing import Dict, List
 
 @dataclass
-class AnomalyReport:
-    null_spikes: Dict[str, dict] = field(default_factory=dict)
-    outlier_columns: Dict[str, dict] = field(default_factory=dict)
-    has_anomalies: bool = False
+class anomalyList:
+    outliers: Dict[str, dict] = field(default_factory= dict)
+    nulls: Dict[str, dict] = field(default_factory= dict)
+    has_anomaly: bool = False
 
-    def to_text(self) -> str:
-        if not self.has_anomalies:
-            return "No anomalies detected."
+    def llmText(self, threshold):
+        if not self.has_anomaly:
+            return 'No anomalies detected'
+        anomalies = ['Anomalies detected:']
+        if self.outliers:
+            anomalies.append(' Outliers detected:')
+            for col, info in self.outliers.items():
+                anomalies.append(
+                    f'  "{col}" column had {info['outlier_count']} outliers\n'
+                    #f'  Outliers = {info['outliers']}\n'
+                    f'  Maximum value = {info['max_value']:.2f}\n'
+                    f'  Minimum value = {info['min_value']:.2f}\n'
+                    f'  Upper limit = {info['upper_fence']:.2f}\n'
+                    f'  lower limit = {info['lower_fence']:.2f}')
+        if self.nulls:
+            anomalies.append(f' Null spikes detected (null % > {threshold})')
+            for col, info in self.nulls.items():
+                anomalies.append(
+                    f'  "{col}" column had {info['null_count']} nulls\n'
+                    f'   Null percentage: {info['null_prcnt']}')
 
-        lines = ["Anomalies detected:"]
-        if self.null_spikes:
-            lines.append("  Null spikes (>5% missing):")
-            for col, info in self.null_spikes.items():
-                lines.append(
-                    f"    '{col}': {info['null_pct']:.1f}% nulls ({info['null_count']} rows)"
-                )
-        if self.outlier_columns:
-            lines.append("  Statistical outliers (IQR method):")
-            for col, info in self.outlier_columns.items():
-                lines.append(
-                    f"    '{col}': {info['outlier_count']} outliers "
-                    f"(max={info['max_value']:.2f}, expected ≤ {info['upper_fence']:.2f})"
-                )
-        return "\n".join(lines)
+        return '\n'.join(anomalies)
+    
+def detect_anomaly(data_path: str, null_threshold: float = 0.05) -> anomalyList:
+    df_dataset = pd.read_csv(data_path)
+    n = len(df_dataset)
+    anomaly = anomalyList()
 
+    for col in df_dataset.columns:
+        null_count = df_dataset[col].isna().sum()
+        null_prcnt = float(null_count / n)
 
-def detect_anomalies(dataset_path: str, null_threshold: float = 0.05) -> AnomalyReport:
-    """
-    Run anomaly checks on a single CSV file.
-    - null_threshold: flag columns where null % exceeds this (default 5%)
-    """
-    df = pd.read_csv(dataset_path)
-    report = AnomalyReport()
-    n = len(df)
-
-    # --- Null spike detection ---
-    for col in df.columns:
-        null_count = df[col].isna().sum()
-        null_pct = null_count / n
-        if null_pct > null_threshold:
-            report.null_spikes[col] = {
-                "null_count": int(null_count),
-                "null_pct": null_pct * 100,
+        if null_prcnt > null_threshold:
+            anomaly.nulls[col] = {
+                'null_count': null_count,
+                'null_prcnt': null_prcnt
             }
+    
+    numeric_columns = df_dataset.select_dtypes(include= [np.number]).columns
 
-    # --- Outlier detection (IQR method on numeric columns) ---
-    numeric_cols = df.select_dtypes(include=[np.number]).columns
-    for col in numeric_cols:
-        series = df[col].dropna()
-        if len(series) < 10:
-            continue
+    for ncol in numeric_columns:
+        series = df_dataset[ncol].dropna()
+        if len(series) < 10: continue   #dataset staistically small
+        
         q1 = series.quantile(0.25)
         q3 = series.quantile(0.75)
-        iqr = q3 - q1
-        lower = q1 - 3 * iqr   # using 3× IQR for extreme outliers
-        upper = q3 + 3 * iqr
-        outliers = series[(series < lower) | (series > upper)]
-        if len(outliers) > 0:
-            report.outlier_columns[col] = {
-                "outlier_count": len(outliers),
-                "max_value": float(series.max()),
-                "upper_fence": float(upper),
+        iqr = q3 - q1                           #Interquartile range
+        
+        lower_fence = q1 - (iqr * 3)            #'Extreme' outliers lie outside 3x boundary of iqr
+        upper_fence = q3 + (iqr * 3)            #'Mild' outliers lie outside 1.5x iqr
+        
+        outlier = series[(series < lower_fence) | (series > upper_fence)]
+        
+        if len(outlier) > 0:
+            anomaly.outliers[ncol] = {
+                'outlier_count': len(outlier),
+                'outliers': outlier.to_list(),
+                'max_value': float(max(outlier)),
+                'min_value': float(min(outlier)),
+                'upper_fence': float(upper_fence),
+                'lower_fence': float(lower_fence)
             }
+    
+    anomaly.has_anomaly = bool (
+        anomaly.nulls or anomaly.outliers
+    )
+    return anomaly
 
-    report.has_anomalies = bool(report.null_spikes or report.outlier_columns)
-    return report
-
-
-# test
-if __name__ == "__main__":
-    report = detect_anomalies("data/current.csv")
-    print(report.to_text())
+if __name__ == '__main__':
+    anomalyTest = detect_anomaly('data/current.csv')
+    print(anomalyTest.llmText(0.05))

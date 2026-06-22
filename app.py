@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from core.schema_checker import compare_schemas
-from core.anomaly_detector import detect_anomalies
+from core.detector import detect_anomalies
 from core.health_report import generate_health_report
 import tempfile, os
 

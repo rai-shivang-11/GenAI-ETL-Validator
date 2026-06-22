@@ -5,7 +5,7 @@ from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.tools import tool
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from core.schema_checker import compare_schemas
-from core.anomaly_detector import detect_anomalies
+from core.detector import detect_anomalies
 from core.health_report import generate_health_report
 
 load_dotenv()
