@@ -9,7 +9,7 @@ class anomalyList:
     nulls: Dict[str, dict] = field(default_factory= dict)
     has_anomaly: bool = False
 
-    def llmText(self, threshold):
+    def llmText(self):
         if not self.has_anomaly:
             return 'No anomalies detected'
         anomalies = ['Anomalies detected:']
@@ -24,7 +24,7 @@ class anomalyList:
                     f'  Upper limit = {info['upper_fence']:.2f}\n'
                     f'  lower limit = {info['lower_fence']:.2f}')
         if self.nulls:
-            anomalies.append(f' Null spikes detected (null % > {threshold})')
+            anomalies.append(f' Null spikes detected (null % > 5)')
             for col, info in self.nulls.items():
                 anomalies.append(
                     f'  "{col}" column had {info['null_count']} nulls\n'
@@ -32,7 +32,7 @@ class anomalyList:
 
         return '\n'.join(anomalies)
     
-def detect_anomaly(data_path: str, null_threshold: float = 0.05) -> anomalyList:
+def detectAnomaly(data_path: str, null_threshold: float = 0.05) -> anomalyList:
     df_dataset = pd.read_csv(data_path)
     n = len(df_dataset)
     anomaly = anomalyList()
@@ -78,5 +78,5 @@ def detect_anomaly(data_path: str, null_threshold: float = 0.05) -> anomalyList:
     return anomaly
 
 if __name__ == '__main__':
-    anomalyTest = detect_anomaly('data/current.csv')
-    print(anomalyTest.llmText(0.05))
+    anomalyTest = detectAnomaly('data/current.csv')
+    print(anomalyTest.llmText())

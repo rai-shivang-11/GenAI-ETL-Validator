@@ -28,7 +28,7 @@ End with 2-3 recommended actions."""),                                          
 Write a pipeline health summary report.""")                                                     #Triple quotes is for multi-line strings, preserves line breaks
 ])
 
-def generate_health_report(schema_text: str, anomaly_text: str) -> str:
+def generateHealthReport(schema_text: str, anomaly_text: str) -> str:
     llm = get_llm()
     chain = REPORT_PROMPT | llm                    # Same as llm(REPORT_PROMPT) --> Passes the prompt to the llm runnable (objects that take input and give an output)
     response = chain.invoke({
@@ -41,5 +41,5 @@ def generate_health_report(schema_text: str, anomaly_text: str) -> str:
 if __name__ == '__main__':
     schema_text = "Schema drift detected:\n  Columns removed: signup_date\n  'purchase_amt' renamed to 'transaction_value'"
     anomaly_text = "Anomalies detected:\n  Null spikes: 'age' 8% nulls\n  Outliers: 'transaction_value' 10 extreme values"
-    report = generate_health_report(schema_text, anomaly_text)
+    report = generateHealthReport(schema_text, anomaly_text)
     print(report)
