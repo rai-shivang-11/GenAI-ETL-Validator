@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
-from core.schema_checker import compare_schemas
-from core.detector import detect_anomalies
-from core.health_report import generate_health_report
+from core.drift_checker import driftChecker
+from core.anomaly_detector import detectAnomaly
+from core.health_report import generateHealthReport
 import tempfile, os
 
 st.set_page_config(page_title="GenAI ETL Validator", page_icon="🔍", layout="wide")
