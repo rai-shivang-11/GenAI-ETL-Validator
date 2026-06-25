@@ -18,7 +18,7 @@ class anomalyList:
             for col, info in self.outliers.items():
                 anomalies.append(
                     f'  "{col}" column had {info['outlier_count']} outliers\n'
-                    #f'  Outliers = {info['outliers']}\n'
+                    f'  Outliers = {info['outliers']}\n'
                     f'  Maximum value = {info['max_value']:.2f}\n'
                     f'  Minimum value = {info['min_value']:.2f}\n'
                     f'  Upper limit = {info['upper_fence']:.2f}\n'
