@@ -12,7 +12,7 @@ st.set_page_config(page_title = 'ETL Validator', page_icon = '🔍', layout = 'w
 st.title('Gen-AI ETL Validator')
 st.caption('Detect schema drift, flag anomalies, and get AI-generated pipeline health reports')
 
-col1, col2 = st.columns(2)                                 #Initializes two columns
+col1, col2 = st.columns(2)                                  #Initializes two columns
 
 with col1:                                                  #Everything in this with block belongs to col1
     st.subheader('Baseline dataset')

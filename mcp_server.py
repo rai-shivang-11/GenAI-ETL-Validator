@@ -1,41 +1,26 @@
 from fastmcp import FastMCP
-from core.schema_checker import compare_schemas
-from core.detector import detect_anomalies
-from core.health_report import generate_health_report
+from core.drift_checker import driftChecker
+from core.anomaly_detector import detectAnomaly
+from core.health_report import generateHealthReport
 
-mcp = FastMCP("ETL Validator")
+mcp = FastMCP('ETL Validator')
 
+@mcp.tool
+def schemaDrift(base_path : str, curr_path:str) -> str:
+    drift = driftChecker(base_path, curr_path)
+    return drift.llmText()
 
-@mcp.tool()
-def check_schema_drift(baseline_path: str, current_path: str) -> str:
-    """
-    Detect schema drift between two CSV dataset versions.
-    Returns a plain-text summary of added/removed columns and type changes.
-    """
-    drift = compare_schemas(baseline_path, current_path)
-    return drift.to_text()
+@mcp.tool
+def anomalies(curr_path: str) -> str:
+    anomaly = detectAnomaly(curr_path)
+    return anomaly.llmText()
 
+@mcp.tool
+def healthReport(base_path: str, curr_path: str) -> str:
+    drift = driftChecker(base_path, curr_path)
+    anomaly = detectAnomaly(curr_path)
+    report = generateHealthReport(drift.llmText(), anomaly.llmText())
+    return report
 
-@mcp.tool()
-def detect_data_anomalies(dataset_path: str) -> str:
-    """
-    Detect statistical anomalies in a CSV dataset.
-    Checks for null spikes (>5% missing) and IQR-based outliers.
-    """
-    report = detect_anomalies(dataset_path)
-    return report.to_text()
-
-
-@mcp.tool()
-def generate_pipeline_health_report(baseline_path: str, current_path: str) -> str:
-    """
-    Run a complete ETL pipeline health check.
-    Combines schema drift detection, anomaly detection, and an AI-generated summary.
-    """
-    drift = compare_schemas(baseline_path, current_path)
-    anomalies = detect_anomalies(current_path)
-    return generate_health_report(drift.to_text(), anomalies.to_text())
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     mcp.run()
